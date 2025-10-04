@@ -15,8 +15,7 @@ class Shell:
             os.makedirs(self.vfs_root)
         self.current_dir = self.vfs_root
 
-        self.text_area = scrolledtext.ScrolledText(root, wrap="word", height=20, width=80,
-                                                   bg="black", fg="white")
+        self.text_area = scrolledtext.ScrolledText(root, wrap="word", height=20, width=80,bg="black", fg="white")
         self.text_area.pack(fill="both", expand=True)
         self.text_area.insert("end", "Введите команду, или введите команду 'exit' для выхода\n")
         self.text_area.insert("end", "Стартовые параметры:\n")
@@ -68,13 +67,18 @@ class Shell:
 
         if cmd == "cd":
             target = args[0] if args else self.vfs_root
-            new_path = os.path.abspath(os.path.join(self.current_dir, target))
+            if target == "~":
+                new_path = self.vfs_root
+            else:
+                new_path = os.path.abspath(os.path.join(self.current_dir, target))
+            
             if not new_path.startswith(self.vfs_root) or not os.path.isdir(new_path):
                 self.text_area.insert("end", f"\nОшибка: '{target}' не является директорией или недоступна")
                 self.text_area.insert("end", "\n$ ")
                 self.text_area.see("end")
                 self.root.update_idletasks()
                 return False
+
             self.current_dir = new_path
             self.text_area.insert("end", f"\nДиректория изменена на: {self.current_dir}")
             self.text_area.insert("end", "\n$ ")
@@ -90,12 +94,53 @@ class Shell:
             self.root.update_idletasks()
             return True
 
+        if cmd == "pwd":
+            self.text_area.insert("end", f"\n{self.current_dir}")
+            self.text_area.insert("end", "\n$ ")
+            self.text_area.see("end")
+            self.root.update_idletasks()
+            return True
+
+        if cmd == "cat":
+            if not args:
+                self.text_area.insert("end", "\nОшибка: укажите файл для чтения")
+            else:
+                target_file = os.path.abspath(os.path.join(self.current_dir, args[0]))
+                if not target_file.startswith(self.vfs_root) or not os.path.isfile(target_file):
+                    self.text_area.insert("end", f"\nОшибка: файл '{args[0]}' недоступен")
+                else:
+                    with open(target_file, "r", encoding="utf-8") as f:
+                        self.text_area.insert("end", "\n" + f.read())
+            self.text_area.insert("end", "\n$ ")
+            self.text_area.see("end")
+            self.root.update_idletasks()
+            return True
+
+        if cmd == "mkdir":
+            if not args:
+                self.text_area.insert("end", "\nОшибка: укажите имя директории")
+            else:
+                new_dir = os.path.abspath(os.path.join(self.current_dir, args[0]))
+                if not new_dir.startswith(self.vfs_root):
+                    self.text_area.insert("end", "\nОшибка: недопустимый путь")
+                else:
+                    try:
+                        os.makedirs(new_dir, exist_ok=True)
+                        self.text_area.insert("end", f"\nДиректория создана: {new_dir}")
+                    except Exception as e:
+                        self.text_area.insert("end", f"\nОшибка создания: {e}")
+            self.text_area.insert("end", "\n$ ")
+            self.text_area.see("end")
+            self.root.update_idletasks()
+            return True
+
 
         self.text_area.insert("end", f"\nОшибка: неизвестная команда '{cmd}'")
         self.text_area.insert("end", "\n$ ")
         self.text_area.see("end")
         self.root.update_idletasks()
         return False
+
 
 
     def run_startup_script(self, script_path):
@@ -130,7 +175,7 @@ class Shell:
         self.text_area.insert("end", "\nСтартовый скрипт успешно выполнен.\n$ ")
         self.text_area.see("end")
         self.root.update_idletasks()
-
+        
 
 
 def parse_args():
