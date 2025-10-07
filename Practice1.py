@@ -15,7 +15,7 @@ class Shell:
             os.makedirs(self.vfs_root)
         self.current_dir = self.vfs_root
 
-        self.text_area = scrolledtext.ScrolledText(root, wrap="word", height=20, width=80,bg="black", fg="white")
+        self.text_area = scrolledtext.ScrolledText(root, wrap="word", height=20, width=80, bg="black", fg="white")
         self.text_area.pack(fill="both", expand=True)
         self.text_area.insert("end", "Введите команду, или введите команду 'exit' для выхода\n")
         self.text_area.insert("end", "Стартовые параметры:\n")
@@ -29,7 +29,6 @@ class Shell:
         self.root.update_idletasks()
         self.text_area.bind("<Return>", self.on_enter)
 
-
         if startup_script:
             self.run_startup_script(startup_script)
 
@@ -39,12 +38,10 @@ class Shell:
             return lastline.split("$", 1)[1]
         return lastline
 
-
     def on_enter(self, event):
         cmd = self.get_current_command().strip()
         self.execute_command(cmd)
         return "break"
-
 
     def execute_command(self, command_line, echo_input=True):
         command_line = os.path.expandvars(command_line)
@@ -134,14 +131,61 @@ class Shell:
             self.root.update_idletasks()
             return True
 
+        if cmd == "head":
+            if not args:
+                self.text_area.insert("end", "\nОшибка: укажите файл для чтения")
+            else:
+                target_file = os.path.abspath(os.path.join(self.current_dir, args[0]))
+                if not target_file.startswith(self.vfs_root) or not os.path.isfile(target_file):
+                    self.text_area.insert("end", f"\nОшибка: файл '{args[0]}' недоступен")
+                else:
+                    n = 10
+                    if len(args) > 1 and args[1].isdigit():
+                        n = int(args[1])
+                    with open(target_file, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
+                        self.text_area.insert("end", "\n" + "".join(lines[:n]))
+            self.text_area.insert("end", "\n$ ")
+            self.text_area.see("end")
+            return True
+
+        if cmd == "tac":
+            if not args:
+                self.text_area.insert("end", "\nОшибка: укажите файл для чтения")
+            else:
+                target_file = os.path.abspath(os.path.join(self.current_dir, args[0]))
+                if not target_file.startswith(self.vfs_root) or not os.path.isfile(target_file):
+                    self.text_area.insert("end", f"\nОшибка: файл '{args[0]}' недоступен")
+                else:
+                    with open(target_file, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
+                        self.text_area.insert("end", "\n" + "".join(reversed(lines)))
+            self.text_area.insert("end", "\n$ ")
+            self.text_area.see("end")
+            return True
+
+        if cmd == "tree":
+            def walk(dir_path, prefix=""):
+                entries = os.listdir(dir_path)
+                for i, entry in enumerate(entries):
+                    path = os.path.join(dir_path, entry)
+                    connector = "└── " if i == len(entries)-1 else "├── "
+                    self.text_area.insert("end", f"\n{prefix}{connector}{entry}")
+                    if os.path.isdir(path):
+                        new_prefix = prefix + ("    " if i == len(entries)-1 else "│   ")
+                        walk(path, new_prefix)
+            
+            self.text_area.insert("end", f"\n{self.current_dir}")
+            walk(self.current_dir)
+            self.text_area.insert("end", "\n$ ")
+            self.text_area.see("end")
+            return True
 
         self.text_area.insert("end", f"\nОшибка: неизвестная команда '{cmd}'")
         self.text_area.insert("end", "\n$ ")
         self.text_area.see("end")
         self.root.update_idletasks()
         return False
-
-
 
     def run_startup_script(self, script_path):
         script_path = os.path.abspath(os.path.expandvars(script_path))
@@ -175,15 +219,12 @@ class Shell:
         self.text_area.insert("end", "\nСтартовый скрипт успешно выполнен.\n$ ")
         self.text_area.see("end")
         self.root.update_idletasks()
-        
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Эмулятор VFS")
     parser.add_argument("--vfs", "-v", help="Путь к корню VFS", default=None)
     parser.add_argument("--script", "-s", help="Путь к стартовому скрипту", default=None)
     return parser.parse_args()
-
 
 def main():
     args = parse_args()
@@ -194,7 +235,6 @@ def main():
     root = tkinter.Tk()
     Shell(root, vfs_root=args.vfs, startup_script=args.script, debug_params=debug_params)
     root.mainloop()
-
 
 if __name__ == "__main__":
     main()
