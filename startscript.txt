@@ -1,0 +1,63 @@
+
+pwd
+
+
+ls
+
+
+mkdir dir1
+mkdir dir2
+mkdir dir1/subdir
+
+
+ls
+
+
+cd dir1
+pwd
+
+
+cd not_exist_dir
+
+
+cat
+
+
+
+
+cat test.txt
+
+head test.txt
+
+
+head test.txt 5
+
+
+tac test.txt
+
+
+tree
+
+
+rm test.txt
+
+
+rm not_exist.txt
+
+
+cd subdir
+cd ..
+rm subdir
+
+
+cd ..
+rm dir1
+
+
+cd dir2
+pwd
+
+
+cd ..
+tree
+

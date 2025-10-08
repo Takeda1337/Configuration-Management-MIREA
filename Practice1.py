@@ -180,6 +180,31 @@ class Shell:
             self.text_area.insert("end", "\n$ ")
             self.text_area.see("end")
             return True
+        if cmd == "rm":
+            if not args:
+                self.text_area.insert("end", "\nОшибка. путь для удаления не указан")
+            else:
+                target_path = os.path.abspath(os.path.join(self.current_dir, args[0]))
+                if not target_path.startswith(self.vfs_root):
+                    self.text_area.insert("end", "\nОшибка. Путь недоступен")
+                elif not os.path.exists(target_path):
+                    self.text_area.insert("end", f"\nОшибка. Объект '{args[0]}' не существует")
+                else:
+                    try:
+                        if os.path.isfile(target_path):
+                            os.remove(target_path)
+                            self.text_area.insert("end", f"\nФайл удалён: {target_path}")
+                        elif os.path.isdir(target_path):
+                            if not os.listdir(target_path):
+                                os.rmdir(target_path)
+                                self.text_area.insert("end", f"\nДиректория {target_path} удалена")
+                            else:
+                                self.text_area.insert("end", f"\nОшибка: директория '{args[0]}' не пуста")
+                    except Exception as e:
+                        self.text_area.insert("end", f"\nОшибка удаления: {e}")
+                self.text_area.insert("end", "\n$ ")
+                self.text_area.see("end")
+                return True
 
         self.text_area.insert("end", f"\nОшибка: неизвестная команда '{cmd}'")
         self.text_area.insert("end", "\n$ ")
@@ -233,7 +258,10 @@ def main():
         "script": args.script,
     }
     root = tkinter.Tk()
-    Shell(root, vfs_root=args.vfs, startup_script=args.script, debug_params=debug_params)
+    
+    startup_script = args.script if args.script else "startscript.txt"
+    
+    Shell(root, vfs_root=args.vfs, startup_script=startup_script, debug_params=debug_params)
     root.mainloop()
 
 if __name__ == "__main__":
