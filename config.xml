@@ -1,0 +1,7 @@
+<config>
+    <package_name>example-package</package_name>
+    <repository_url>https://example.com/repo</repository_url>
+    <mode>local</mode>
+    <ascii_output>true</ascii_output>
+    <max_depth>3</max_depth>
+</config>
