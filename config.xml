@@ -1,6 +1,6 @@
 <config>
-    <package_name>example-package</package_name>
-    <repository_url>https://example.com/repo</repository_url>
+    <package_name>bash</package_name>
+    <repository_url>https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/x86_64</repository_url>
     <mode>local</mode>
     <ascii_output>true</ascii_output>
     <max_depth>3</max_depth>
